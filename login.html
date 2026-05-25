@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LUXE — Sign In</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Jost:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{--bg:#0a0a0a;--bg2:#111;--surface:#1a1a1a;--text:#f0ece4;--text2:#a09890;--text3:#6a6260;--accent:#c9a96e;--accent2:#e8c99a;--red:#e05555;--border:#2a2a2a;--font-display:'Cormorant Garamond',serif;--font-body:'Jost',sans-serif}
+body{background:var(--bg);color:var(--text);font-family:var(--font-body);min-height:100vh;display:flex;align-items:center;justify-content:center}
+.container{display:flex;width:900px;min-height:580px;box-shadow:0 40px 80px rgba(0,0,0,0.6)}
+.left{flex:1;background:linear-gradient(135deg,#1a1208,#2d1f0a,#1a1208);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px;text-align:center}
+.logo{font-family:var(--font-display);font-size:42px;color:var(--accent);letter-spacing:8px;margin-bottom:16px}
+.left p{color:#a09890;font-size:14px;font-weight:300;line-height:1.7;letter-spacing:0.5px}
+.left-art{font-size:80px;margin:24px 0;opacity:0.7}
+.right{flex:1;background:var(--surface);padding:48px 40px;display:flex;flex-direction:column;justify-content:center}
+.tabs{display:flex;gap:0;margin-bottom:32px;border-bottom:1px solid var(--border)}
+.tab{flex:1;padding:12px;background:none;border:none;color:var(--text3);font-family:var(--font-body);font-size:13px;letter-spacing:2px;text-transform:uppercase;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all 0.2s}
+.tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.form-group{margin-bottom:20px}
+.form-group label{display:block;font-size:11px;letter-spacing:2px;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+.form-group input{width:100%;background:var(--bg);border:1px solid var(--border);color:var(--text);padding:12px 16px;font-family:var(--font-body);font-size:14px;outline:none;transition:border 0.2s}
+.form-group input:focus{border-color:var(--accent)}
+.form-group input::placeholder{color:var(--text3)}
+.btn{width:100%;background:var(--accent);color:#1a1814;border:none;padding:14px;font-family:var(--font-body);font-size:13px;font-weight:600;letter-spacing:3px;text-transform:uppercase;cursor:pointer;transition:background 0.2s;margin-top:8px}
+.btn:hover{background:var(--accent2)}
+.error{color:var(--red);font-size:12px;letter-spacing:1px;margin-top:12px;text-align:center;min-height:18px}
+.success{color:#4caf50;font-size:12px;letter-spacing:1px;margin-top:12px;text-align:center}
+.panel{display:none}.panel.active{display:block}
+@media(max-width:640px){.container{flex-direction:column;width:95%}.left{padding:32px;min-height:180px}.left-art{font-size:48px;margin:12px 0}}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="left">
+    <div class="logo">LUXE</div>
+    <div class="left-art">🛍️</div>
+    <p>Welcome to LUXE Fashion House.<br>Sign in to explore exclusive collections and manage your orders.</p>
+  </div>
+  <div class="right">
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab('login')">SIGN IN</button>
+      <button class="tab" onclick="switchTab('register')">REGISTER</button>
+    </div>
+
+    <!-- LOGIN -->
+    <div class="panel active" id="loginPanel">
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="loginEmail" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="loginPassword" placeholder="••••••••">
+      </div>
+      <button class="btn" onclick="handleLogin()">SIGN IN</button>
+      <div class="error" id="loginError"></div>
+      <p style="font-size:12px;color:var(--text3);text-align:center;margin-top:16px;letter-spacing:1px">
+        Don't have an account? Click "REGISTER" to create one.
+      </p>
+    </div>
+
+    <!-- REGISTER -->
+    <div class="panel" id="registerPanel">
+      <div class="form-group">
+        <label>Full Name</label>
+        <input type="text" id="regName" placeholder="Your Name">
+      </div>
+      <div class="form-group">
+        <label>Email Address</label>
+        <input type="email" id="regEmail" placeholder="you@example.com">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="regPassword" placeholder="Min. 6 characters">
+      </div>
+      <button class="btn" onclick="handleRegister()">CREATE ACCOUNT</button>
+      <div class="error" id="registerError"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:5000/api';
+
+function switchTab(tab){
+  document.querySelectorAll('.tab').forEach((t,i)=>t.classList.toggle('active',i===(tab==='login'?0:1)));
+  document.getElementById('loginPanel').classList.toggle('active',tab==='login');
+  document.getElementById('registerPanel').classList.toggle('active',tab==='register');
+}
+
+async function handleLogin(){
+  const email=document.getElementById('loginEmail').value;
+  const password=document.getElementById('loginPassword').value;
+  const errEl=document.getElementById('loginError');
+  errEl.textContent='';
+  if(!email||!password){errEl.textContent='Please fill all fields';return;}
+  try{
+    const res=await fetch(API+'/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+    const data=await res.json();
+    if(!res.ok){errEl.textContent=data.error;return;}
+    localStorage.setItem('token',data.token);
+    localStorage.setItem('role',data.role);
+    localStorage.setItem('name',data.name);
+    window.location.href=data.role==='admin'?'admin.html':'user.html';
+  }catch(e){errEl.textContent='Cannot connect to server. Is Flask running?';}
+}
+
+async function handleRegister(){
+  const name=document.getElementById('regName').value;
+  const email=document.getElementById('regEmail').value;
+  const password=document.getElementById('regPassword').value;
+  const errEl=document.getElementById('registerError');
+  errEl.textContent='';
+  if(!name||!email||!password){errEl.textContent='Please fill all fields';return;}
+  if(password.length<6){errEl.textContent='Password must be at least 6 characters';return;}
+  try{
+    const res=await fetch(API+'/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name,email,password})});
+    const data=await res.json();
+    if(!res.ok){errEl.textContent=data.error;return;}
+    localStorage.setItem('token',data.token);
+    localStorage.setItem('role','user');
+    localStorage.setItem('name',data.name);
+    window.location.href='user.html';
+  }catch(e){errEl.textContent='Cannot connect to server. Is Flask running?';}
+}
+
+// Redirect if already logged in
+const token=localStorage.getItem('token');
+if(token){
+  const role=localStorage.getItem('role');
+  window.location.href=role==='admin'?'admin.html':'user.html';
+}
+</script>
+</body>
+</html>
